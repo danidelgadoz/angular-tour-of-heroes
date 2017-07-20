@@ -9,7 +9,8 @@ import { HEROES } from './mock-heroes';
 @Injectable()
 export class HeroService {
     private heroesUrl = 'api/heroes';  // URL to web api
-
+    private headers = new Headers({'Content-Type': 'application/json'});
+    
     constructor(private http: Http) { }
     
     // getHeroes(): Promise<Hero[]> {
@@ -28,9 +29,17 @@ export class HeroService {
         return Promise.reject(error.message || error);
     }
 
+    // getHero(id: number): Promise<Hero> {
+    //     return this.getHeroes()
+    //         .then(heroes => heroes.find(hero => hero.id === id));
+    // }
+
     getHero(id: number): Promise<Hero> {
-        return this.getHeroes()
-            .then(heroes => heroes.find(hero => hero.id === id));
+        const url = `${this.heroesUrl}/${id}`;
+        return this.http.get(url)
+        .toPromise()
+        .then(response => response.json().data as Hero)
+        .catch(this.handleError);
     }
 
     getHeroesSlowly(): Promise<Hero[]> {
@@ -38,5 +47,14 @@ export class HeroService {
             // Simulate server latency with 2 second delay
             setTimeout(() => resolve(this.getHeroes()), 2000);
         });
+    }
+
+    update(hero: Hero): Promise<Hero> {
+        const url = `${this.heroesUrl}/${hero.id}`;
+        return this.http
+            .put(url, JSON.stringify(hero), {headers: this.headers})
+            .toPromise()
+            .then(() => hero)
+            .catch(this.handleError);
     }
 }
